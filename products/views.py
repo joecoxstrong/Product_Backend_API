@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from .serializers import ProductSerializer
 from .models import Product
 from rest_framework import status
-
+from django.shortcuts import get_object_or_404
 from products import serializers
 
 @api_view(['GET','POST'])
@@ -20,12 +20,16 @@ def product_list(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-@api_view(['GET'])       
+@api_view(['GET','PUT'])       
 def product_detail(request,pk):
-    try:
-        product = Product.objects.get(pk=pk)
-        serializer = ProductSerializer(product)
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'GET':
+        serializer = ProductSerializer(product);
         return Response(serializer.data)
-    except Product.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'PUT':
+        serializer = ProductSerializer(product, data=request.data) 
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data) 
+    
     
